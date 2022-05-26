@@ -42,7 +42,7 @@ object FlinkAssignment {
 
     /** Use the space below to print and test your questions. */
 //    dummy_question(commitStream).print()
-    question_two(commitStream).print()
+    question_seven(commitStream).print()
 
     /** Start the streaming environment. **/
     env.execute()
