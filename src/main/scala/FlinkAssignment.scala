@@ -42,7 +42,7 @@ object FlinkAssignment {
 
     /** Use the space below to print and test your questions. */
 //    dummy_question(commitStream).print()
-    question_seven(commitStream).print()
+    question_two(commitStream).print()
 
     /** Start the streaming environment. **/
     env.execute()
@@ -59,11 +59,11 @@ object FlinkAssignment {
     */
   def question_one(input: DataStream[Commit]): DataStream[String] = {
 
-    val test = input
+    val pipeline = input
       .filter(x => (x.stats.get.additions >= 20))
       .map(x => x.sha)
 
-    test
+    pipeline
   }
 
   /**
@@ -77,12 +77,12 @@ object FlinkAssignment {
       case x :: tail => ((x.filename.get, x.deletions)) :: helper(tail)
     }
 
-    val test = input
+    val pipeline = input
       .flatMap(x => helper(x.files))
       .filter(x => (x._2 > 30))
       .map(x => x._1)
 
-    test
+    pipeline
   }
 
   /**
@@ -107,14 +107,14 @@ object FlinkAssignment {
       if (tempFileType.isEmpty) "nothing" else tempFileType.get
     }
 
-    val test = input.
+    val pipeline = input.
       flatMap(x => getFileExtension(x)).
       filter(x => (x.equals("scala") || x.equals("java"))).
       map(x => (x, 1)).
       keyBy(0).
       sum(1)
 
-    test
+    pipeline
   }
 
   /**
@@ -123,8 +123,7 @@ object FlinkAssignment {
     */
   def question_four(input: DataStream[Commit]): DataStream[(String, String, Int)] = {
 
-
-    val test = input.
+    val pipeline = input.
       flatMap(x => x.files).
       filter(x => (!x.status.isEmpty && !x.filename.isEmpty)).
       map(x => (x.filename.get, x.status.get, x.changes)).
@@ -133,7 +132,7 @@ object FlinkAssignment {
       keyBy(0,1).
       sum(2)
 
-    test
+    pipeline
   }
 
   /**
@@ -149,13 +148,13 @@ object FlinkAssignment {
       result
     }
 
-    val test = input.
+    val pipeline = input.
       assignAscendingTimestamps(x => x.commit.committer.date.getTime).
       map(x => (helperDate(x.commit.committer.date), 1)).
       windowAll(TumblingEventTimeWindows.of(Time.days(1))).
       reduce((x,y) => (x._1, x._2 + y._2))
 
-    test
+    pipeline
   }
 
   /**
@@ -169,14 +168,14 @@ object FlinkAssignment {
       if (0 <= changesTotal && changesTotal <= 20) "small" else "large"
     }
 
-    val test = input
+    val pipeline = input
       .assignAscendingTimestamps(x => x.commit.committer.date.getTime)
       .map(x => (helperClassification(x.stats.get.total), 1))
       .keyBy(0)
       .window(SlidingEventTimeWindows.of(Time.hours(48), Time.hours(12)))
       .reduce((x,y) => (x._1, x._2 + y._2))
 
-    test
+    pipeline
   }
 
   /**
@@ -246,7 +245,7 @@ object FlinkAssignment {
       repositoryResult
     }
 
-    val test = commitStream
+    val pipeline = commitStream
       .assignAscendingTimestamps(x => x.commit.committer.date.getTime)
       .map(x =>(helperGetRepositoryName(x.url), x.commit.committer.name, x.stats.get.total))
       .keyBy(_._1)
@@ -254,7 +253,7 @@ object FlinkAssignment {
       .process(new MyProcessWindowFunction())
       .filter(x => (x.amountOfCommits > 20 && x.mostPopularCommitter.split(",").size<3))
 
-    test
+    pipeline
   }
 
   /**
@@ -295,15 +294,13 @@ object FlinkAssignment {
 
     val commitStreamTemp = commitStream
       .assignAscendingTimestamps(x => x.commit.committer.date.getTime)
-//      .flatMap(x => helper(x))
-//      .filter(x => (x._2.equals(".java")))
       .keyBy(_.sha)
 
     val temp = geoStream
       .assignAscendingTimestamps(x => x.createdAt.getTime)
       .keyBy(_.sha)
 
-    val test = commitStreamTemp
+    val pipeline = commitStreamTemp
       .intervalJoin(temp)
       .between(Time.hours(-1), Time.minutes(30))
       .process(new MyProcessWindowFunction())
@@ -311,7 +308,7 @@ object FlinkAssignment {
       .window(TumblingEventTimeWindows.of(Time.days(7)))
       .reduce((x,y) => (x._1, x._2 + y._2))
 
-    test
+    pipeline
   }
 
   /**
@@ -341,7 +338,7 @@ object FlinkAssignment {
       repositoryResult
     }
 
-    val test = inputStream
+    val pipeline = inputStream
       .assignAscendingTimestamps(x => x.commit.committer.date.getTime)
       .flatMap(x => helper(x))
       .filter(x => (x._3.equals("added") || x._3.equals("removed")))
@@ -350,7 +347,7 @@ object FlinkAssignment {
       .window(TumblingEventTimeWindows.of(Time.days(1)))
       .reduce((x,y) => (x._1, x._2 + ", " + y._2))
 
-    test
+    pipeline
   }
 
 }
