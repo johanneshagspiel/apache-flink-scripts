@@ -14,14 +14,14 @@ This repository contains a collection of Apache Flink scripts used to get famili
 These scripts cover a range of topics of Apache Flink such as:
 
 - basic manipulation of DataStreams via functions like:
-  - map
-  - filter
-  - flatMap
-- working with stateful streams via keyBy
+  - `map`
+  - `filter`
+  - `flatMap`
+- working with stateful streams via `keyBy`
 - dealing with infinite streams via:
-  - different kinds of window assigners like tumbling or sliding windows
+  - different kinds of window assigners like `TumblingEventTimeWindows` or `SlidingEventTimeWindows`
   - keyed and non-keyed windows
-  - new ProcessWindowFunction
+  - new `ProcessWindowFunction`
   
 ## Tools
 
